@@ -30,13 +30,14 @@ class SymbolViewCommand(sublime_plugin.TextCommand):
       window.show_quick_panel(
         items = panel_items,
         on_select = lambda index: self.on_symbol_selected(functions, index),
+        on_highlight = lambda index: self.on_symbol_selected(functions, index),
         placeholder = "Functions: {}".format(len(panel_items)),
       )
 
   def on_symbol_selected(self, items, index) -> None:
     if index != -1 and len(items) > index:
       item = items[index]
-      self.view.show_at_center(item.region)
+      self.view.run_command('goto_line', {'line': item.line})
 
   def create_panel_items(self, items):
     return list(map(lambda content: self.create_symbol_with_line_panel(content), items))
