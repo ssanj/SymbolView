@@ -1,0 +1,25 @@
+{
+  // maximum line length (in characters) before the text is truncated
+  // in the quick panel
+  "max_line_length": 100,
+
+  "syntaxes": [
+    {
+      "scala": {
+        "syntax_names": ["Scala", "Scala-Sensory-Underload"],
+        "function_start": "def ",
+        "function_ends": ["{", "="],
+      },
+      "rust": {
+        "syntax_names": ["Rust"],
+        "function_start": "fn ",
+        "function_ends": ["{"],
+      },
+      "python": {
+        "syntax_names": ["Python"],
+        "function_start": "def ",
+        "function_ends": [":"],
+      },
+    },
+  ]
+}

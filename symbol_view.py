@@ -3,14 +3,34 @@ import sublime
 import html
 from typing import List
 from . import symbol_with_line as SWL
+from . import symbol_view_setting as SWS
 
 class SymbolViewCommand(sublime_plugin.TextCommand):
 
-  def run(self, edit):
+  def load_symbol_view_settings(self) -> SWS.SymbolViewSetting:
+    settings = sublime.load_settings("symbol_view.sublime-settings")
+    if settings.has('max_line_length'):
+      # TODO: Add a default if the max_line_length is negative etc
+      return SWS.SymbolViewSetting(settings.get("max_line_length"))
+      # return OpenTabSettings(settings.get('truncation_line_length'), settings.get('truncation_preview_length'))
+    else:
+      print(
+        """
+        Could not find 'max_line_length' settings.
+         Defaulting max_line_length: 80
+         Update symbol_view.sublime-settings to change the above values.
+        """
+      )
+      return SWS.SymbolViewSetting(80)
+
+
+  def run(self, edit) -> None:
+    self.settings = self.load_symbol_view_settings()
     symbol_regions = self.view.symbol_regions()
     # TODO: Generalize for other types of symbols
     functions = self.get_functions(symbol_regions)
     window = self.view.window()
+
     if window:
      panel_items = self.create_panel_items(functions)
      if len(panel_items) > 0:
@@ -32,7 +52,7 @@ class SymbolViewCommand(sublime_plugin.TextCommand):
     return list(map(lambda content: self.create_symbol_with_line_panel(content), items))
 
   def create_symbol_with_line_panel(self, symbol_with_line: SWL.SymbolWithLine) -> sublime.QuickPanelItem:
-    max_line_length = 100 # TODO: move to config
+    max_line_length = self.settings.max_line_length
     search_text = symbol_with_line.name
     details = symbol_with_line.symbol_details.detail
     truncated_details = details[:max_line_length]
@@ -40,18 +60,19 @@ class SymbolViewCommand(sublime_plugin.TextCommand):
     detail_text = html.escape(truncated_details + suffix)
     line_number = symbol_with_line.line
     annotation = symbol_with_line.symbol_details.annotation if symbol_with_line.symbol_details.annotation else ""
+
     return sublime.QuickPanelItem(search_text, f"<u>{detail_text}</u> <strong>{line_number}</strong>", annotation, sublime.KIND_FUNCTION)
 
-  def calculate_line(self, region) -> int:
+  def calculate_line(self, region: sublime.Region) -> int:
     (zero_based_line, _) = self.view.rowcol_utf8(region.begin())
     line = zero_based_line + 1
     return line
 
-  def get_text_at_region(self, region) -> str:
+  def get_text_at_region(self, region: sublime.Region) -> str:
     line_region = self.view.full_line(region)
     return self.view.substr(line_region)
 
-  def get_functions(self, symbol_regions) -> List[SWL.SymbolWithLine]:
+  def get_functions(self, symbol_regions: List[sublime.SymbolRegion]) -> List[SWL.SymbolWithLine]:
     type_defintion = 1
     function_kind = 'Function'
     type_symbols = [

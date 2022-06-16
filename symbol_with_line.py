@@ -17,7 +17,7 @@ class SymbolWithLine:
     self.symbol_details: SD.SymbolDetail = self.parse_function(text)
 
 
-  def parse_function(self, text) -> SD.SymbolDetail:
+  def parse_function(self, text: str) -> SD.SymbolDetail:
     line_without_spaces = text.lstrip().rstrip()
     syntax_settings = self.get_syntax_settings()
     default_detail = SD.SymbolDetail(text.lstrip().rstrip())
