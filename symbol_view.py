@@ -1,56 +1,7 @@
 import sublime_plugin
 import sublime
-import re
-
-class SymbolWithLine:
-  def __init__(self, symbol, line, text) -> None:
-    self.symbol = symbol
-    self.line = line
-    self.name = symbol.name
-    self.tpe = symbol.type
-    self.kind = symbol.kind
-    self.syntax = symbol.syntax
-    self.region = symbol.region
-    self.text = text
-    self.details = self.parse_function(text)
-
-   # def parse_function(self, text):
-   #   line_without_spaces = text.lstrip().rstrip()
-   #   # TODO: Make this customisable per syntax type
-   #   function_start = "def"
-   #   function_ends = ["{", "="]
-   #   parameters_and_return = line_without_spaces.replace(function_start, "") .lstrip()
-   #   for end in function_ends:
-   #       parameters_and_return = parameters_and_return.replace(end, "")
-   #   return parameters_and_return
-
-  def parse_function(self, text):
-     # TODO: Make this customisable per syntax type
-    function_reg = '^.*def\\s+([a-zA-Z0-9_]+\\(.*\\))(\\s*:[^=}]*)?'
-    matches = re.match(function_reg, text)
-    if matches and len(matches.groups()) > 0:
-      if len(matches.groups()) == 1: # have only name + params
-       groups = matches.groups()
-       func_parameters = groups[0].lstrip()
-       return func_parameters
-      else: # have name + params + return type
-       groups = matches.groups()
-       func_parameters = groups[0].lstrip()
-       maybe_return_type = groups[1]
-       return_type = maybe_return_type.lstrip().rstrip() if maybe_return_type else ""
-       return f"{func_parameters}{return_type}"
-    else:
-      return text.lstrip().rstrip() + "..."
-
-  def __str__(self) -> str:
-    name = self.name
-    line = self.line
-    text = self.text
-    details = self.details
-    return f"{name}:{line} -> {text} ->> {details}"
-
-  def __repr__(self) -> str:
-    return self.__str__()
+import html
+from . import symbol_with_line as SWL
 
 class SymbolViewCommand(sublime_plugin.TextCommand):
 
@@ -82,7 +33,14 @@ class SymbolViewCommand(sublime_plugin.TextCommand):
     return list(map(lambda content: self.create_symbol_with_line_panel(content), items))
 
   def create_symbol_with_line_panel(self, symbol_with_line):
-    return sublime.QuickPanelItem("f:"+ symbol_with_line.details, "<u>{}:{}</u>".format(symbol_with_line.name, symbol_with_line.line), "", sublime.KIND_FUNCTION)
+    max_line_length = 100 # TODO: move to config
+    search_text = symbol_with_line.name
+    details = symbol_with_line.details
+    truncated_details = details[:max_line_length]
+    suffix = "..." if len(details) > max_line_length else ""
+    detail_text = html.escape(truncated_details + suffix)
+    line_number = symbol_with_line.line
+    return sublime.QuickPanelItem(search_text, f"<u>{detail_text}</u> <strong>{line_number}</strong>", "", sublime.KIND_FUNCTION)
 
   def calculate_line(self, region):
     (zero_based_line, _) = self.view.rowcol_utf8(region.begin())
@@ -97,7 +55,7 @@ class SymbolViewCommand(sublime_plugin.TextCommand):
     type_defintion = 1
     function_kind = 'Function'
     type_symbols = [
-       SymbolWithLine(symbol, self.calculate_line(symbol.region), self.get_text_at_region(symbol.region))
+       SWL.SymbolWithLine(symbol, self.calculate_line(symbol.region), self.get_text_at_region(symbol.region))
        for symbol in symbol_regions
        if symbol.type == type_defintion and symbol.kind[2] == function_kind
     ]
