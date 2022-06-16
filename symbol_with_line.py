@@ -1,64 +1,54 @@
-from typing import List
 from typing import Optional
-
-class SymbolDetailSetting:
-  def __init__(self, prefix: str, suffixes: List[str]) -> None:
-    self.prefix = prefix
-    self.suffixes = suffixes
-
-
-  def __str__(self) -> str:
-    prefix = self.prefix
-    suffixes = self.suffixes
-    return f"SymbolDetailSetting(prefix={prefix}, suffixes={suffixes})"
-
-  def __repr__(self) -> str:
-    return self.__str__()
+from . import symbol_detail_setting as SDS
+from . import symbol_detail as SD
+import sublime
 
 class SymbolWithLine:
 
   def __init__(self, symbol, line, text) -> None:
-    self.symbol = symbol
-    self.line = line
-    self.name = symbol.name
-    self.tpe = symbol.type
-    self.kind = symbol.kind
-    self.syntax = symbol.syntax
-    self.region = symbol.region
-    self.text = text
-    self.details = self.parse_function(text)
+    self.symbol: sublime.SymbolRegion = symbol
+    self.line: int = line
+    self.name: str = symbol.name
+    self.tpe: int = symbol.type
+    self.kind: int = symbol.kind
+    self.syntax: sublime.Syntax = symbol.syntax
+    self.region: sublime.Region = symbol.region
+    self.text: str = text
+    self.symbol_details: SD.SymbolDetail = self.parse_function(text)
 
-  # def parse_function(self, text):
-  #   return text
 
-  def parse_function(self, text) -> str:
+  def parse_function(self, text) -> SD.SymbolDetail:
     line_without_spaces = text.lstrip().rstrip()
     syntax_settings = self.get_syntax_settings()
+    default_detail = SD.SymbolDetail(text.lstrip().rstrip())
     if syntax_settings:
       splits = line_without_spaces.split(syntax_settings.prefix)
       if len(splits) == 1: # does not match prefix
-        parameters_and_return = splits[0]
+        return SD.SymbolDetail(splits[0])
       elif len(splits) == 2: # matched on prefix
         before = splits[0] # text before prefix
         after = splits[1] # text after prefix
-        parameters_and_return = after if len(before.lstrip()) == 0 else f"{before} {after}"
+        detail = after
+
+        for end in syntax_settings.suffixes:
+          detail = detail.rstrip() # remove any leading space
+          if detail.endswith(end):
+            detail = detail.replace(end, "")
+
+        return SD.SymbolDetail(detail, None if len(before.lstrip()) == 0 else before.lstrip())
       else: # invalid number of splits
-        return text.lstrip().rstrip()
-
-      for end in syntax_settings.suffixes:
-         if parameters_and_return.endswith(end):
-          parameters_and_return = parameters_and_return.replace(end, "")
-
-      return parameters_and_return
+        return default_detail
     else:
-      return text.lstrip().rstrip()
+      return default_detail
 
-  def get_syntax_settings(self) -> Optional[SymbolDetailSetting]:
+  def get_syntax_settings(self) -> Optional[SDS.SymbolDetailSetting]:
     syntax = self.syntax
     if syntax == "Scala" or syntax == "Scala-Sensory-Underload":
-      return SymbolDetailSetting("def ", ["{", "="])
+      return SDS.SymbolDetailSetting("def ", ["{", "="])
     elif syntax == "Rust":
-      return SymbolDetailSetting("fn ", ["{"])
+      return SDS.SymbolDetailSetting("fn ", ["{"])
+    elif syntax == "Python":
+      return SDS.SymbolDetailSetting("def ", [":"])
     else:
       return None
 
@@ -84,8 +74,8 @@ class SymbolWithLine:
     name = self.name
     line = self.line
     text = self.text
-    details = self.details
-    return f"SymbolWithLine(name={name}, line={line}, text={text}, details={details})"
+    symbol_details = self.symbol_details
+    return f"SymbolWithLine(name={name}, line={line}, text={text}, symbol_details={symbol_details})"
 
   def __repr__(self) -> str:
     return self.__str__()

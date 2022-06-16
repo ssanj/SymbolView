@@ -1,6 +1,7 @@
 import sublime_plugin
 import sublime
 import html
+from typing import List
 from . import symbol_with_line as SWL
 
 class SymbolViewCommand(sublime_plugin.TextCommand):
@@ -22,34 +23,35 @@ class SymbolViewCommand(sublime_plugin.TextCommand):
      else:
        sublime.message_dialog("No functions to display")
 
-  def on_symbol_selected(self, items, index) -> None:
+  def on_symbol_selected(self, items: List[SWL.SymbolWithLine], index: int) -> None:
     if index != -1 and len(items) > index:
       item = items[index]
       self.view.run_command('goto_line', {'line': item.line})
 
-  def create_panel_items(self, items):
+  def create_panel_items(self, items: List[SWL.SymbolWithLine]) -> List[sublime.QuickPanelItem]:
     return list(map(lambda content: self.create_symbol_with_line_panel(content), items))
 
-  def create_symbol_with_line_panel(self, symbol_with_line):
+  def create_symbol_with_line_panel(self, symbol_with_line: SWL.SymbolWithLine) -> sublime.QuickPanelItem:
     max_line_length = 100 # TODO: move to config
     search_text = symbol_with_line.name
-    details = symbol_with_line.details
+    details = symbol_with_line.symbol_details.detail
     truncated_details = details[:max_line_length]
     suffix = "..." if len(details) > max_line_length else ""
     detail_text = html.escape(truncated_details + suffix)
     line_number = symbol_with_line.line
-    return sublime.QuickPanelItem(search_text, f"<u>{detail_text}</u> <strong>{line_number}</strong>", "", sublime.KIND_FUNCTION)
+    annotation = symbol_with_line.symbol_details.annotation if symbol_with_line.symbol_details.annotation else ""
+    return sublime.QuickPanelItem(search_text, f"<u>{detail_text}</u> <strong>{line_number}</strong>", annotation, sublime.KIND_FUNCTION)
 
-  def calculate_line(self, region):
+  def calculate_line(self, region) -> int:
     (zero_based_line, _) = self.view.rowcol_utf8(region.begin())
     line = zero_based_line + 1
     return line
 
-  def get_text_at_region(self, region):
+  def get_text_at_region(self, region) -> str:
     line_region = self.view.full_line(region)
     return self.view.substr(line_region)
 
-  def get_functions(self, symbol_regions):
+  def get_functions(self, symbol_regions) -> List[SWL.SymbolWithLine]:
     type_defintion = 1
     function_kind = 'Function'
     type_symbols = [
