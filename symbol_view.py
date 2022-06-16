@@ -9,8 +9,6 @@ class SymbolViewCommand(sublime_plugin.TextCommand):
     symbol_regions = self.view.symbol_regions()
     # TODO: Generalize for other types of symbols
     functions = self.get_functions(symbol_regions)
-    for f in functions:
-     print(f)
     window = self.view.window()
     if window:
      panel_items = self.create_panel_items(functions)
