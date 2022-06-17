@@ -1,6 +1,8 @@
 import sublime
 
 from typing import Optional
+from typing import Any
+from typing import Dict
 from . import symbol_with_line as SWL
 from . import symbol_view_setting as SVS
 
@@ -33,7 +35,7 @@ class SettingsLoader:
       )
       return SVS.SymbolViewSetting(80)
 
-  def load_single_syntax(self, syntax: dict) -> Optional[SVS.SymbolViewSettingLabeledSyntax]:
+  def load_single_syntax(self, syntax: Dict[str, Any]) -> Optional[SVS.SymbolViewSettingLabeledSyntax]:
     if syntax and len(syntax) >= 1:
       (key, values) = next(iter(syntax.items()))
       return self.load_syntax(key, values)
@@ -41,7 +43,7 @@ class SettingsLoader:
       print("No syntaxes to load")
       return None
 
-  def load_syntax(self, key: str, syntax: dict) -> Optional[SVS.SymbolViewSettingLabeledSyntax]:
+  def load_syntax(self, key: str, syntax: Dict[str, Any]) -> Optional[SVS.SymbolViewSettingLabeledSyntax]:
     syntax_names = syntax.get('syntax_names') #list -> can't be empty
     function_start = syntax.get('function_start') # str -> can't be empty
     function_ends = syntax.get('function_ends') #list -> can be empty

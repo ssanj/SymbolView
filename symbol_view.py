@@ -9,7 +9,7 @@ from . import settings_loader as SL
 
 class SymbolViewCommand(sublime_plugin.TextCommand):
 
-  def run(self, edit) -> None:
+  def run(self, edit: sublime.Edit) -> None:
     settings = sublime.load_settings("symbol_view.sublime-settings")
     settings_loader = SL.SettingsLoader(settings)
     self.settings = settings_loader.load_symbol_view_settings()
