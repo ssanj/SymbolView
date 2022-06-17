@@ -3,6 +3,13 @@
   // in the quick panel
   "max_line_length": 80,
 
+  // General format of a syntax:
+  // "syntax_label": {
+  //   "syntax_names": ["syntax1", "syntax2"], <- these are the syntax ST detects them as. Mandatory
+  //   "function_start": "def ", <- how to detect the start of a function. Mandatory
+  //   "function_ends": ["{", "="], <- how to detect the function has ended. Does not support multiline functions. Optional. Can be [].
+  // }
+
   "syntaxes": [
       {
         "scala": {
