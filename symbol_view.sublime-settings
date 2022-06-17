@@ -6,7 +6,7 @@
   // General format of a syntax:
   // "syntax_label": {
   //   "syntax_names": ["syntax1", "syntax2"], <- these are the syntax ST detects them as. Mandatory
-  //   "function_start": "def ", <- how to detect the start of a function. Mandatory
+  //   "function_start": "def", <- how to detect the start of a function. Mandatory
   //   "function_ends": ["{", "="], <- how to detect the function has ended. Does not support multiline functions. Optional. Can be [].
   // }
 
@@ -14,21 +14,21 @@
       {
         "scala": {
           "syntax_names": ["Scala", "Scala-Sensory-Underload"],
-          "function_start": "def ",
+          "function_start": "def",
           "function_ends": ["{", "="],
         }
       },
       {
         "rust": {
           "syntax_names": ["Rust"],
-          "function_start": "fn ",
+          "function_start": "fn",
           "function_ends": ["{"],
         }
       },
       {
         "python": {
           "syntax_names": ["Python"],
-          "function_start": "def ",
+          "function_start": "def",
           "function_ends": [":"],
         }
       }

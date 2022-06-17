@@ -24,20 +24,21 @@ class SymbolWithLine:
     syntax_settings = self.get_syntax_settings(settings)
     default_detail = SD.SymbolDetail(text.lstrip().rstrip())
     if syntax_settings:
-      splits = line_without_spaces.split(syntax_settings.prefix)
-      if len(splits) == 1: # does not match prefix
+      splits = line_without_spaces.split(syntax_settings.function_start)
+      if len(splits) == 1: # does not match function start token
         return SD.SymbolDetail(splits[0])
-      elif len(splits) == 2: # matched on prefix
-        before = splits[0] # text before prefix
-        after = splits[1] # text after prefix
+      elif len(splits) == 2: # matched on function start token
+        before = splits[0] # text before function start token
+        after = splits[1] # text after function start token
         detail = after
 
-        for end in syntax_settings.suffixes:
+        for end in syntax_settings.function_ends: # remove all ends and included spaces
           detail = detail.rstrip() # remove any leading space
           if detail.endswith(end):
             detail = detail.replace(end, "")
 
-        return SD.SymbolDetail(detail, None if len(before.lstrip()) == 0 else before.lstrip())
+        annotation_hint = None if len(before.lstrip()) == 0 else before.lstrip()
+        return SD.SymbolDetail(detail, annotation_hint)
       else: # invalid number of splits
         return default_detail
     else:
@@ -45,7 +46,7 @@ class SymbolWithLine:
 
   def get_syntax_settings(self, settings: Optional[SVS.SymbolViewSettingSyntax]) -> Optional[SDS.SymbolDetailSetting]:
     if settings:
-       function_start = settings.function_start
+       function_start = settings.function_start + " " # add a space to enable tokenizing
        function_ends = settings.function_ends
        return SDS.SymbolDetailSetting(function_start, function_ends)
     else:
