@@ -1,25 +1,27 @@
 from typing import Optional
 from . import symbol_detail_setting as SDS
 from . import symbol_detail as SD
+from . import symbol_view_setting as SVS
 import sublime
 
 class SymbolWithLine:
 
-  def __init__(self, symbol, line, text) -> None:
-    self.symbol: sublime.SymbolRegion = symbol
-    self.line: int = line
+  def __init__(self, symbol: sublime.SymbolRegion, line: int, text: str, syntax_setting: Optional[SVS.SymbolViewSettingSyntax] = None) -> None:
+    self.symbol = symbol
+    self.line = line
     self.name: str = symbol.name
     self.tpe: int = symbol.type
-    self.kind: int = symbol.kind
+    self.kind = symbol.kind # TODO: Find out this type
     self.syntax: sublime.Syntax = symbol.syntax
     self.region: sublime.Region = symbol.region
-    self.text: str = text
-    self.symbol_details: SD.SymbolDetail = self.parse_function(text)
+    self.text = text
+    self.symbol_details: SD.SymbolDetail = self.parse_function(text, syntax_setting)
+    self.syntax_setting = syntax_setting
 
 
-  def parse_function(self, text: str) -> SD.SymbolDetail:
+  def parse_function(self, text: str, settings: Optional[SVS.SymbolViewSettingSyntax]) -> SD.SymbolDetail:
     line_without_spaces = text.lstrip().rstrip()
-    syntax_settings = self.get_syntax_settings()
+    syntax_settings = self.get_syntax_settings(settings)
     default_detail = SD.SymbolDetail(text.lstrip().rstrip())
     if syntax_settings:
       splits = line_without_spaces.split(syntax_settings.prefix)
@@ -41,14 +43,11 @@ class SymbolWithLine:
     else:
       return default_detail
 
-  def get_syntax_settings(self) -> Optional[SDS.SymbolDetailSetting]:
-    syntax = self.syntax
-    if syntax == "Scala" or syntax == "Scala-Sensory-Underload":
-      return SDS.SymbolDetailSetting("def ", ["{", "="])
-    elif syntax == "Rust":
-      return SDS.SymbolDetailSetting("fn ", ["{"])
-    elif syntax == "Python":
-      return SDS.SymbolDetailSetting("def ", [":"])
+  def get_syntax_settings(self, settings: Optional[SVS.SymbolViewSettingSyntax]) -> Optional[SDS.SymbolDetailSetting]:
+    if settings:
+       function_start = settings.function_start
+       function_ends = settings.function_ends
+       return SDS.SymbolDetailSetting(function_start, function_ends)
     else:
       return None
 

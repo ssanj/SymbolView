@@ -4,23 +4,22 @@ import html
 from typing import List
 from typing import Optional
 from . import symbol_with_line as SWL
-from . import symbol_view_setting as SWS
+from . import symbol_view_setting as SVS
 
 class SymbolViewCommand(sublime_plugin.TextCommand):
 
-  def load_symbol_view_settings(self) -> SWS.SymbolViewSetting:
+  def load_symbol_view_settings(self) -> SVS.SymbolViewSetting:
     settings = sublime.load_settings("symbol_view.sublime-settings")
     if settings.has('max_line_length') and settings.has('syntaxes'):
 
       max_line_length = settings.get("max_line_length")
       syntax_values_list = settings.get("syntaxes")
       syntaxes = list(map(lambda syntax_value: self.load_single_syntax(syntax_value), syntax_values_list))
-      print(syntaxes)
 
       valid_syntaxes = [syntax for syntax in syntaxes if syntax]
 
       # TODO: Add a default if the max_line_length is negative etc
-      return SWS.SymbolViewSetting(max_line_length, valid_syntaxes)
+      return SVS.SymbolViewSetting(max_line_length, valid_syntaxes)
       # return OpenTabSettings(settings.get('truncation_line_length'), settings.get('truncation_preview_length'))
     else:
       print(
@@ -31,9 +30,9 @@ class SymbolViewCommand(sublime_plugin.TextCommand):
          Update symbol_view.sublime-settings to change the above values.
         """
       )
-      return SWS.SymbolViewSetting(80)
+      return SVS.SymbolViewSetting(80)
 
-  def load_single_syntax(self, syntax: dict) -> Optional[SWS.SymbolViewSettingLabeledSyntax]:
+  def load_single_syntax(self, syntax: dict) -> Optional[SVS.SymbolViewSettingLabeledSyntax]:
     if syntax and len(syntax) >= 1:
       (key, values) = next(iter(syntax.items()))
       return self.load_syntax(key, values)
@@ -41,13 +40,13 @@ class SymbolViewCommand(sublime_plugin.TextCommand):
       print("No syntaxes to load")
       return None
 
-  def load_syntax(self, key: str, syntax: dict) -> Optional[SWS.SymbolViewSettingLabeledSyntax]:
+  def load_syntax(self, key: str, syntax: dict) -> Optional[SVS.SymbolViewSettingLabeledSyntax]:
     syntax_names = syntax.get('syntax_names')
     function_start = syntax.get('function_start')
     function_ends = syntax.get('function_ends')
 
     if syntax_names and function_start and function_ends:
-      return SWS.SymbolViewSettingLabeledSyntax(key, SWS.SymbolViewSettingSyntax(syntax_names, function_start, function_ends))
+      return SVS.SymbolViewSettingLabeledSyntax(key, SVS.SymbolViewSettingSyntax(syntax_names, function_start, function_ends))
     else:
       print(f"Could find not required values for 'syntax_names','function_start','function_ends' for key: {key} from {syntax}")
       return None
@@ -105,9 +104,20 @@ class SymbolViewCommand(sublime_plugin.TextCommand):
   def get_functions(self, symbol_regions: List[sublime.SymbolRegion]) -> List[SWL.SymbolWithLine]:
     type_defintion = 1
     function_kind = 'Function'
+    syntax_settings = self.get_syntax_settings()
     type_symbols = [
-       SWL.SymbolWithLine(symbol, self.calculate_line(symbol.region), self.get_text_at_region(symbol.region))
+       SWL.SymbolWithLine(symbol, self.calculate_line(symbol.region), self.get_text_at_region(symbol.region), syntax_settings)
        for symbol in symbol_regions
        if symbol.type == type_defintion and symbol.kind[2] == function_kind
     ]
     return type_symbols
+
+  def get_syntax_settings(self) -> Optional[SVS.SymbolViewSettingSyntax]:
+    view_syntax = self.view.syntax()
+    if view_syntax:
+      syntax_of_file = view_syntax.name
+      matches = [syntax.syntax_values for syntax in self.settings.syntaxes if syntax_of_file in syntax.syntax_values.syntax_names]
+      return matches[0] if len(matches) > 0 else None
+    else:
+      return None
+

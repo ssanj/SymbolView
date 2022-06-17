@@ -9,7 +9,3 @@ class SettingsParser:
   def get_max_line_length(self) -> int:
     return 10
 
-
-# class SymbolViewSetting:
-
-#   def __init__(self):
