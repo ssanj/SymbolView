@@ -10,26 +10,52 @@ from . import settings_loader as SL
 class SymbolViewCommand(sublime_plugin.TextCommand):
 
   def run(self, edit: sublime.Edit) -> None:
+    view = self.view
+    selections = view.sel()
+    selected_word = self.has_selected_word(selections)
+
     settings = sublime.load_settings("symbol_view.sublime-settings")
     settings_loader = SL.SettingsLoader(settings)
     self.settings = settings_loader.load_symbol_view_settings()
     print(self.settings)
-    symbol_regions = self.view.symbol_regions()
+    symbol_regions = view.symbol_regions()
+
     # TODO: Generalize for other types of symbols
     functions = self.get_functions(symbol_regions)
-    window = self.view.window()
 
-    if window:
-     panel_items = self.create_panel_items(functions)
-     if len(panel_items) > 0:
-       window.show_quick_panel(
-         items = panel_items,
-         on_select = lambda index: self.on_symbol_selected(functions, index),
-         on_highlight = lambda index: self.on_symbol_selected(functions, index),
-         placeholder = "Functions: {}".format(len(panel_items)),
-       )
-     else:
-       sublime.message_dialog("No functions to display")
+    user_selection_matches = [s for s in functions if s.name == selected_word]
+
+    if len(user_selection_matches) > 0:
+      user_selection = user_selection_matches[0]
+      print(f"user selection: {user_selection}")
+      view.run_command('goto_line', {'line': user_selection.line})
+    else:
+      window = view.window()
+
+      if window:
+       panel_items = self.create_panel_items(functions)
+       if len(panel_items) > 0:
+         window.show_quick_panel(
+           items = panel_items,
+           on_select = lambda index: self.on_symbol_selected(functions, index),
+           on_highlight = lambda index: self.on_symbol_selected(functions, index),
+           placeholder = "Functions: {}".format(len(panel_items)),
+         )
+       else:
+         sublime.message_dialog("No functions to display")
+
+  def has_selected_word(self, selection: sublime.Selection) -> Optional[str]:
+    if len(selection) > 0:
+      view = self.view
+      possible_word = view.substr(view.word(selection[0]))
+      if possible_word and possible_word.lstrip():
+        word = possible_word.lstrip()
+      else:
+        word = None
+    else:
+      word = None
+
+    return word
 
   def on_symbol_selected(self, items: List[SWL.SymbolWithLine], index: int) -> None:
     if index != -1 and len(items) > index:
