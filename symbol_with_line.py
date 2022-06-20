@@ -1,21 +1,31 @@
-from typing import Optional
+from typing import Optional, NamedTuple
 from . import symbol_detail_setting as SDS
 from . import symbol_detail as SD
 from . import symbol_view_setting as SVS
 import sublime
 
+class SymbolName(NamedTuple):
+  value: str
+
+class SymbolRegionText(NamedTuple):
+  value: str
+
+class SymbolRegionLine(NamedTuple):
+  value: int
+
+class SymbolRegion(NamedTuple):
+  line: SymbolRegionLine
+  text: SymbolRegionText
+  name: SymbolName
+
 class SymbolWithLine:
 
-  def __init__(self, symbol: sublime.SymbolRegion, line: int, text: str, syntax_setting: Optional[SVS.SymbolViewSettingSyntax] = None) -> None:
+  def __init__(self, symbol: SymbolRegion, syntax_setting: Optional[SVS.SymbolViewSettingSyntax] = None) -> None:
     self.symbol = symbol
-    self.line = line
-    self.name: str = symbol.name
-    self.tpe: int = symbol.type
-    self.kind = symbol.kind # TODO: Find out this type
-    self.syntax: sublime.Syntax = symbol.syntax
-    self.region: sublime.Region = symbol.region
-    self.text = text
-    self.symbol_details: SD.SymbolDetail = self.parse_function(text, syntax_setting)
+    self.line = symbol.line.value
+    self.name = symbol.name.value
+    self.text = symbol.text.value
+    self.symbol_details: SD.SymbolDetail = self.parse_function(self.text, syntax_setting)
     self.syntax_setting = syntax_setting
 
 

@@ -65,7 +65,7 @@ class SymbolViewCommand(sublime_plugin.TextCommand):
     function_kind = 'Function'
     syntax_settings = self.get_syntax_settings()
     type_symbols = [
-       SWL.SymbolWithLine(symbol, self.calculate_line(symbol.region), self.get_text_at_region(symbol.region), syntax_settings)
+       SWL.SymbolWithLine(self.fromSublimeSymbolRegion(symbol), syntax_settings)
        for symbol in symbol_regions
        if symbol.type == type_defintion and symbol.kind[2] == function_kind
     ]
@@ -79,4 +79,10 @@ class SymbolViewCommand(sublime_plugin.TextCommand):
       return matches[0] if len(matches) > 0 else None
     else:
       return None
+
+  def fromSublimeSymbolRegion(self, sublime_region: sublime.SymbolRegion) -> SWL.SymbolRegion:
+    line = SWL.SymbolRegionLine(self.calculate_line(sublime_region.region))
+    text = SWL.SymbolRegionText(self.get_text_at_region(sublime_region.region))
+    name = SWL.SymbolName(sublime_region.name)
+    return SWL.SymbolRegion(line, text, name)
 

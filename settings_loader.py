@@ -3,6 +3,8 @@ import sublime
 from typing import Optional
 from typing import Any
 from typing import Dict
+from typing import List
+from typing import cast
 from . import symbol_with_line as SWL
 from . import symbol_view_setting as SVS
 
@@ -46,9 +48,10 @@ class SettingsLoader:
   def load_syntax(self, key: str, syntax: Dict[str, Any]) -> Optional[SVS.SymbolViewSettingLabeledSyntax]:
     syntax_names = syntax.get('syntax_names') #list -> can't be empty
     function_start = syntax.get('function_start') # str -> can't be empty
-    function_ends = syntax.get('function_ends') #list -> can be empty
+    function_ends_op: Optional[list[str]] = syntax.get('function_ends') #list -> can be empty
 
-    if syntax_names and function_start and function_ends != None :
+    if syntax_names and function_start and function_ends_op != None:
+      function_ends = cast(List[str], function_ends_op)
       return SVS.SymbolViewSettingLabeledSyntax(key, SVS.SymbolViewSettingSyntax(syntax_names, function_start, function_ends))
     else:
       print(f"Could find not required values for 'syntax_names','function_start','function_ends' for key: {key} from {syntax}")
