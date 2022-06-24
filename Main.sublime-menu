@@ -17,7 +17,7 @@
                         [
                             {
                                 "command": "edit_settings", "args": {
-                                    "base_file": "${packages}/SymbolView/symbol-view.sublime-settings",
+                                    "base_file": "${packages}/SymbolView/symbol_view.sublime-settings",
                                     "default": "{\n$0\n}\n"
                                 },
                                 "caption": "Settings"

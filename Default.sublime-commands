@@ -1,3 +1,4 @@
 [
     { "caption": "SymbolView: Functions", "command": "symbol_view" },
+    { "caption": "Preferences: SymbolView Settings", "command": "edit_settings", "args": { "base_file": "${packages}/SymbolView/symbol_view.sublime-settings", "default": "{\n$0\n}\n" } },
 ]
